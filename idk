@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Big Island Weather — Hawai'i</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Spectral:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ocean: #0a2a3a;
+    --deep: #061820;
+    --lava: #c0392b;
+    --lava-glow: #e74c3c;
+    --gold: #d4a843;
+    --mist: #7fb3c8;
+    --foam: #e8f4f8;
+    --leaf: #2d6a4f;
+    --sand: #f0d9a0;
+    --sky-clear: #87ceeb;
+    --sky-cloud: #b0bec5;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--deep);
+    color: var(--foam);
+    font-family: 'Spectral', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ANIMATED OCEAN BACKGROUND */
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(10,42,58,0.95) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(45,106,79,0.3) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 80% at 50% 100%, rgba(6,24,32,1) 0%, transparent 80%),
+      linear-gradient(160deg, #061820 0%, #0a2a3a 40%, #0d3347 70%, #061820 100%);
+    pointer-events: none;
+  }
+
+  .wave {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 200%;
+    height: 120px;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wave svg { width: 100%; height: 100%; }
+  .wave1 { animation: waveMove 12s linear infinite; }
+  .wave2 { animation: waveMove 18s linear infinite reverse; opacity: 0.05; bottom: 10px; }
+
+  @keyframes waveMove {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* STARS */
+  .stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+    opacity: 0;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0; }
+    50% { opacity: var(--max-op, 0.6); }
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 60px 20px 40px;
+  }
+
+  .island-name {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(14px, 3vw, 18px);
+    color: var(--gold);
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.3s;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 8vw, 88px);
+    font-weight: 700;
+    line-height: 0.9;
+    color: var(--foam);
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.5s;
+  }
+
+  h1 span {
+    display: block;
+    color: var(--mist);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 0.55em;
+  }
+
+  .date-line {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--mist);
+    margin-top: 18px;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.7s;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* DIVIDER */
+  .divider {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    max-width: 800px;
+    margin: 0 auto 50px;
+    padding: 0 40px;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 0.9s;
+  }
+
+  .divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+  .divider-icon { color: var(--gold); font-size: 18px; }
+
+  /* LOCATION TABS */
+  .location-tabs {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 0 20px 40px;
+    opacity: 0;
+    animation: fadeUp 1s ease forwards 1.1s;
+  }
+
+  .tab {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--mist);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+    backdrop-filter: blur(10px);
+  }
+
+  .tab:hover {
+    background: rgba(212,168,67,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .tab.active {
+    background: rgba(212,168,67,0.2);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* MAIN CONTENT */
+  .content {
+    position: relative;
+    z-index: 10;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* LOCATION PANEL */
+  .location-panel {
+    display: none;
+    animation: panelIn 0.5s ease forwards;
+  }
+
+  .location-panel.active { display: block; }
+
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* CURRENT CONDITIONS */
+  .current-card {
+    background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 50px;
+    margin-bottom: 30px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    backdrop-filter: blur(20px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .current-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .current-temp-area { text-align: center; }
+
+  .weather-icon-big {
+    font-size: 80px;
+    display: block;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 20px rgba(212,168,67,0.4));
+    animation: floatIcon 4s ease-in-out infinite;
+  }
+
+  @keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .temp-big {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(60px, 10vw, 96px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--foam);
+  }
+
+  .temp-big sup {
+    font-size: 0.35em;
+    vertical-align: super;
+    color: var(--mist);
+  }
+
+  .condition-text {
+    font-family: 'Spectral', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: var(--mist);
+    margin-top: 8px;
+  }
+
+  /* STATS GRID */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 3px;
+    padding: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    background: rgba(212,168,67,0.08);
+    border-color: rgba(212,168,67,0.3);
+    transform: translateY(-2px);
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--mist);
+    opacity: 0.7;
+    margin-bottom: 6px;
+  }
+
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--foam);
+  }
+
+  .stat-val small {
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    color: var(--mist);
+  }
+
+  /* LOCATION DESCRIPTION */
+  .location-desc {
+    font-family: 'Spectral', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--mist);
+    margin-top: 20px;
+    line-height: 1.7;
+    opacity: 0.8;
+    text-align: center;
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(212,168,67,0.4), transparent);
+  }
+
+  /* 5-DAY FORECAST */
+  .forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+
+  .forecast-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 3px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .forecast-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 0;
+    background: linear-gradient(180deg, transparent, rgba(212,168,67,0.1));
+    transition: height 0.3s ease;
+  }
+
+  .forecast-card:hover {
+    border-color: rgba(212,168,67,0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+
+  .forecast-card:hover::after { height: 100%; }
+
+  .forecast-card.today {
+    border-color: rgba(212,168,67,0.5);
+    background: rgba(212,168,67,0.08);
+  }
+
+  .forecast-day {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--mist);
+    margin-bottom: 12px;
+  }
+
+  .forecast-card.today .forecast-day { color: var(--gold); }
+
+  .forecast-icon {
+    font-size: 36px;
+    margin-bottom: 10px;
+    display: block;
+    filter: drop-shadow(0 0 8px rgba(212,168,67,0.3));
+  }
+
+  .forecast-high {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--foam);
+  }
+
+  .forecast-high sup {
+    font-size: 12px;
+    color: var(--mist);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .rain-bar-wrap {
+    margin-top: 10px;
+    height: 3px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .rain-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--mist), #4fc3f7);
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .rain-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--mist);
+    opacity: 0.7;
+    margin-top: 6px;
+  }
+
+  /* RAIN CHANCE CHART */
+  .chart-area {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 3px;
+    padding: 30px;
+    margin-bottom: 30px;
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    height: 120px;
+    margin-top: 20px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar-fill {
+    width: 100%;
+    max-width: 48px;
+    border-radius: 2px 2px 0 0;
+    background: linear-gradient(180deg, #4fc3f7, rgba(127,179,200,0.4));
+    transition: height 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+
+  .bar-fill::before {
+    content: attr(data-val);
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--mist);
+    white-space: nowrap;
+  }
+
+  .bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--mist);
+    opacity: 0.6;
+    text-align: center;
+  }
+
+  /* MAP OVERVIEW */
+  .island-overview {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 3px;
+    padding: 30px;
+    text-align: center;
+    position: relative;
+  }
+
+  .island-svg-wrap {
+    max-width: 400px;
+    margin: 0 auto;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .island-svg-wrap svg {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0 30px rgba(10,42,58,0.8));
+  }
+
+  .map-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--foam);
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 12px rgba(212,168,67,0.6);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .map-dot:hover, .map-dot.active-dot {
+    transform: translate(-50%, -50%) scale(1.6);
+    box-shadow: 0 0 20px rgba(212,168,67,0.9);
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 12px rgba(212,168,67,0.6); }
+    50% { box-shadow: 0 0 20px rgba(212,168,67,1), 0 0 40px rgba(212,168,67,0.3); }
+  }
+
+  .map-tooltip {
+    position: absolute;
+    background: rgba(6,24,32,0.95);
+    border: 1px solid rgba(212,168,67,0.4);
+    border-radius: 3px;
+    padding: 8px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--foam);
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translate(-50%, -130%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 20;
+  }
+
+  .map-dot:hover .map-tooltip { opacity: 1; }
+
+  /* ALERT BANNER */
+  .alert-banner {
+    background: rgba(192,57,43,0.15);
+    border: 1px solid rgba(192,57,43,0.4);
+    border-radius: 3px;
+    padding: 14px 20px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #e88;
+  }
+
+  .alert-icon { font-size: 16px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .current-card {
+      grid-template-columns: 1fr;
+      padding: 30px 20px;
+    }
+
+    .forecast-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .forecast-grid .forecast-card:nth-child(4),
+    .forecast-grid .forecast-card:nth-child(5) {
+      grid-column: span 1;
+    }
+
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .bar-chart { gap: 8px; }
+  }
+
+  @media (max-width: 480px) {
+    .forecast-grid { grid-template-columns: repeat(2, 1fr); }
+    .forecast-grid .forecast-card:last-child { grid-column: span 2; }
+    header { padding: 40px 20px 20px; }
+    .current-card { padding: 24px 16px; }
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--mist);
+    opacity: 0.4;
+    letter-spacing: 0.15em;
+  }
+
+  /* ── AI CHATBOT ── */
+  .chat-fab {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 1000;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), #b8860b);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 24px rgba(212,168,67,0.5), 0 0 0 0 rgba(212,168,67,0.4);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+    animation: fabPulse 3s ease-in-out infinite;
+  }
+
+  .chat-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 32px rgba(212,168,67,0.7);
+  }
+
+  @keyframes fabPulse {
+    0%, 100% { box-shadow: 0 4px 24px rgba(212,168,67,0.5), 0 0 0 0 rgba(212,168,67,0.3); }
+    50% { box-shadow: 0 4px 24px rgba(212,168,67,0.5), 0 0 0 10px rgba(212,168,67,0); }
+  }
+
+  .chat-fab .fab-tooltip {
+    position: absolute;
+    right: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(6,24,32,0.95);
+    border: 1px solid rgba(212,168,67,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .chat-fab:hover .fab-tooltip { opacity: 1; }
+
+  .chat-window {
+    position: fixed;
+    bottom: 104px;
+    right: 32px;
+    z-index: 999;
+    width: 380px;
+    max-width: calc(100vw - 40px);
+    height: 520px;
+    max-height: calc(100vh - 140px);
+    background: rgba(6,18,28,0.97);
+    border: 1px solid rgba(212,168,67,0.3);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,67,0.1);
+    backdrop-filter: blur(20px);
+    transform: scale(0.85) translateY(20px);
+    transform-origin: bottom right;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .chat-window.open {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    background: rgba(212,168,67,0.08);
+    flex-shrink: 0;
+  }
+
+  .chat-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), #2d6a4f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .chat-header-info { flex: 1; }
+
+  .chat-header-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--foam);
+  }
+
+  .chat-header-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: #4caf50;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4caf50;
+    animation: statusPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .chat-close {
+    background: none;
+    border: none;
+    color: var(--mist);
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+    padding: 4px;
+  }
+
+  .chat-close:hover { opacity: 1; transform: rotate(90deg); }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: rgba(212,168,67,0.3); border-radius: 2px; }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    animation: msgIn 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .msg.bot .msg-avatar { background: linear-gradient(135deg, var(--gold), #2d6a4f); }
+  .msg.user .msg-avatar { background: rgba(127,179,200,0.2); border: 1px solid rgba(127,179,200,0.3); }
+
+  .msg-bubble {
+    max-width: 82%;
+    padding: 11px 15px;
+    border-radius: 4px;
+    font-family: 'Spectral', serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .msg.bot .msg-bubble {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--foam);
+    border-radius: 2px 12px 12px 12px;
+  }
+
+  .msg.user .msg-bubble {
+    background: rgba(212,168,67,0.15);
+    border: 1px solid rgba(212,168,67,0.25);
+    color: var(--foam);
+    border-radius: 12px 2px 12px 12px;
+    text-align: right;
+  }
+
+  .msg-bubble strong { color: var(--gold); font-style: normal; }
+  .msg-bubble em { color: var(--mist); font-size: 12px; display: block; margin-top: 4px; }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    gap: 10px;
+    animation: msgIn 0.3s ease forwards;
+    opacity: 0;
+  }
+
+  .typing-dots {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 2px 12px 12px 12px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--mist);
+    animation: typingBounce 1.2s ease-in-out infinite;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Suggestions */
+  .chat-suggestions {
+    padding: 10px 20px 0;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  .suggestion-chip {
+    background: rgba(212,168,67,0.08);
+    border: 1px solid rgba(212,168,67,0.25);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .suggestion-chip:hover {
+    background: rgba(212,168,67,0.18);
+    border-color: var(--gold);
+    transform: translateY(-1px);
+  }
+
+  .chat-input-area {
+    display: flex;
+    gap: 10px;
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px;
+    padding: 10px 14px;
+    color: var(--foam);
+    font-family: 'Spectral', serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+    resize: none;
+  }
+
+  .chat-input::placeholder { color: rgba(127,179,200,0.4); font-style: italic; }
+  .chat-input:focus { border-color: rgba(212,168,67,0.5); }
+
+  .chat-send {
+    width: 42px;
+    height: 42px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, var(--gold), #b8860b);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .chat-send:hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(212,168,67,0.4); }
+  .chat-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="stars" id="stars"></div>
+
+<div class="wave wave1">
+  <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+    <path d="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z" fill="rgba(127,179,200,1)"/>
+    <path d="M0,80 C360,40 720,100 1080,60 C1260,40 1380,70 1440,80 L1440,120 L0,120 Z" fill="rgba(10,42,58,1)"/>
+  </svg>
+</div>
+<div class="wave wave2">
+  <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+    <path d="M0,40 C200,80 400,20 600,50 C800,80 1000,30 1200,55 C1320,68 1400,45 1440,50 L1440,120 L0,120 Z" fill="rgba(127,179,200,1)"/>
+  </svg>
+</div>
+
+<header>
+  <p class="island-name">Hawai'i Island — Live Forecast</p>
+  <h1>Big Island<span>Weather</span></h1>
+  <p class="date-line" id="dateLine">——</p>
+</header>
+
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-icon">✦</div>
+  <div class="divider-line"></div>
+</div>
+
+<div class="location-tabs">
+  <button class="tab active" onclick="showLocation('hilo')">Hilo</button>
+  <button class="tab" onclick="showLocation('kona')">Kona</button>
+  <button class="tab" onclick="showLocation('waimea')">Waimea</button>
+  <button class="tab" onclick="showLocation('pahala')">Volcano / Pahala</button>
+</div>
+
+<div class="content">
+
+  <!-- HILO -->
+  <div class="location-panel active" id="panel-hilo">
+    <div class="alert-banner">
+      <span class="alert-icon">🌺</span>
+      <span>Trade winds active — typical windward showers expected through the week</span>
+    </div>
+    <div class="current-card">
+      <div class="current-temp-area">
+        <span class="weather-icon-big">🌥️</span>
+        <div class="temp-big">67<sup>°F</sup></div>
+        <div class="condition-text">Cloudy with showers</div>
+        <p class="location-desc">The lush, rainy heart of the island.<br>Home of Rainbow Falls & the wet side.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today's High</div>
+          <div class="stat-val">67<small>°F</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rain Chance</div>
+          <div class="stat-val">25<small>%</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Elevation</div>
+          <div class="stat-val">36<small> ft</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Side</div>
+          <div class="stat-val" style="font-size:18px;">Windward</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title">5-Day Forecast</div>
+    <div class="forecast-grid">
+      <div class="forecast-card today"><div class="forecast-day">Fri</div><span class="forecast-icon">🌥️</span><div class="forecast-high">67<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:25%"></div></div><div class="rain-pct">25% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sat</div><span class="forecast-icon">🌤️</span><div class="forecast-high">70<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:10%"></div></div><div class="rain-pct">10% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sun</div><span class="forecast-icon">🌦️</span><div class="forecast-high">70<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:25%"></div></div><div class="rain-pct">25% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Mon</div><span class="forecast-icon">🌧️</span><div class="forecast-high">69<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:20%"></div></div><div class="rain-pct">20% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Tue</div><span class="forecast-icon">🌦️</span><div class="forecast-high">69<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:40%"></div></div><div class="rain-pct">40% rain</div></div>
+    </div>
+    <div class="chart-area">
+      <div class="section-title">Precipitation Outlook</div>
+      <div class="bar-chart">
+        <div class="bar-col"><div class="bar-fill" data-val="25%" style="height:25%"></div><div class="bar-label">Fri</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="10%" style="height:10%"></div><div class="bar-label">Sat</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="25%" style="height:25%"></div><div class="bar-label">Sun</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="20%" style="height:20%"></div><div class="bar-label">Mon</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="40%" style="height:40%"></div><div class="bar-label">Tue</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KONA -->
+  <div class="location-panel" id="panel-kona">
+    <div class="current-card">
+      <div class="current-temp-area">
+        <span class="weather-icon-big">⛅</span>
+        <div class="temp-big">72<sup>°F</sup></div>
+        <div class="condition-text">Mostly cloudy</div>
+        <p class="location-desc">The sunny leeward coast.<br>World-famous coffee, diving & sunsets.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today's High</div>
+          <div class="stat-val">72<small>°F</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rain Chance</div>
+          <div class="stat-val">10<small>%</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Elevation</div>
+          <div class="stat-val">30<small> ft</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Side</div>
+          <div class="stat-val" style="font-size:18px;">Leeward</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title">5-Day Forecast</div>
+    <div class="forecast-grid">
+      <div class="forecast-card today"><div class="forecast-day">Fri</div><span class="forecast-icon">⛅</span><div class="forecast-high">72<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:10%"></div></div><div class="rain-pct">10% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sat</div><span class="forecast-icon">☀️</span><div class="forecast-high">72<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:0%"></div></div><div class="rain-pct">0% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sun</div><span class="forecast-icon">🌤️</span><div class="forecast-high">72<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:10%"></div></div><div class="rain-pct">10% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Mon</div><span class="forecast-icon">🌤️</span><div class="forecast-high">73<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:10%"></div></div><div class="rain-pct">10% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Tue</div><span class="forecast-icon">⛅</span><div class="forecast-high">75<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:20%"></div></div><div class="rain-pct">20% rain</div></div>
+    </div>
+    <div class="chart-area">
+      <div class="section-title">Precipitation Outlook</div>
+      <div class="bar-chart">
+        <div class="bar-col"><div class="bar-fill" data-val="10%" style="height:10%"></div><div class="bar-label">Fri</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="0%" style="height:2%"></div><div class="bar-label">Sat</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="10%" style="height:10%"></div><div class="bar-label">Sun</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="10%" style="height:10%"></div><div class="bar-label">Mon</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="20%" style="height:20%"></div><div class="bar-label">Tue</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAIMEA -->
+  <div class="location-panel" id="panel-waimea">
+    <div class="current-card">
+      <div class="current-temp-area">
+        <span class="weather-icon-big">🌥️</span>
+        <div class="temp-big">65<sup>°F</sup></div>
+        <div class="condition-text">Cloudy & cool upcountry</div>
+        <p class="location-desc">High-country ranch town at 2,670 ft.<br>Cool breezes, Mauna Kea views, farms.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today's High</div>
+          <div class="stat-val">66<small>°F</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rain Chance</div>
+          <div class="stat-val">35<small>%</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Elevation</div>
+          <div class="stat-val">2,670<small> ft</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Region</div>
+          <div class="stat-val" style="font-size:18px;">Upcountry</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title">5-Day Forecast</div>
+    <div class="forecast-grid">
+      <div class="forecast-card today"><div class="forecast-day">Fri</div><span class="forecast-icon">🌥️</span><div class="forecast-high">66<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:35%"></div></div><div class="rain-pct">35% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sat</div><span class="forecast-icon">🌤️</span><div class="forecast-high">68<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:20%"></div></div><div class="rain-pct">20% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sun</div><span class="forecast-icon">🌤️</span><div class="forecast-high">68<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:10%"></div></div><div class="rain-pct">10% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Mon</div><span class="forecast-icon">🌦️</span><div class="forecast-high">69<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:35%"></div></div><div class="rain-pct">35% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Tue</div><span class="forecast-icon">🌦️</span><div class="forecast-high">70<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:20%"></div></div><div class="rain-pct">20% rain</div></div>
+    </div>
+    <div class="chart-area">
+      <div class="section-title">Precipitation Outlook</div>
+      <div class="bar-chart">
+        <div class="bar-col"><div class="bar-fill" data-val="35%" style="height:35%"></div><div class="bar-label">Fri</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="20%" style="height:20%"></div><div class="bar-label">Sat</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="10%" style="height:10%"></div><div class="bar-label">Sun</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="35%" style="height:35%"></div><div class="bar-label">Mon</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="20%" style="height:20%"></div><div class="bar-label">Tue</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAHALA / VOLCANO -->
+  <div class="location-panel" id="panel-pahala">
+    <div class="alert-banner">
+      <span class="alert-icon">🌋</span>
+      <span>Volcano area — Kīlauea activity may affect air quality. Check HVO for vog conditions.</span>
+    </div>
+    <div class="current-card">
+      <div class="current-temp-area">
+        <span class="weather-icon-big">🌫️</span>
+        <div class="temp-big">52<sup>°F</sup></div>
+        <div class="condition-text">Cloudy & cool at elevation</div>
+        <p class="location-desc">High-altitude rainforest & volcano country.<br>Ka'ū district — cool, misty, otherworldly.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Today's High</div>
+          <div class="stat-val">52<small>°F</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rain Chance</div>
+          <div class="stat-val">20<small>%</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Elevation</div>
+          <div class="stat-val">3,000<small>+ ft</small></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">District</div>
+          <div class="stat-val" style="font-size:18px;">Ka'ū</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title">5-Day Forecast</div>
+    <div class="forecast-grid">
+      <div class="forecast-card today"><div class="forecast-day">Fri</div><span class="forecast-icon">🌫️</span><div class="forecast-high">52<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:20%"></div></div><div class="rain-pct">20% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sat</div><span class="forecast-icon">🌧️</span><div class="forecast-high">55<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:35%"></div></div><div class="rain-pct">35% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Sun</div><span class="forecast-icon">🌧️</span><div class="forecast-high">54<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:35%"></div></div><div class="rain-pct">35% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Mon</div><span class="forecast-icon">🌦️</span><div class="forecast-high">53<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:20%"></div></div><div class="rain-pct">20% rain</div></div>
+      <div class="forecast-card"><div class="forecast-day">Tue</div><span class="forecast-icon">⛈️</span><div class="forecast-high">49<sup>°</sup></div><div class="rain-bar-wrap"><div class="rain-bar" style="width:60%"></div></div><div class="rain-pct">60% rain</div></div>
+    </div>
+    <div class="chart-area">
+      <div class="section-title">Precipitation Outlook</div>
+      <div class="bar-chart">
+        <div class="bar-col"><div class="bar-fill" data-val="20%" style="height:20%"></div><div class="bar-label">Fri</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="35%" style="height:35%"></div><div class="bar-label">Sat</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="35%" style="height:35%"></div><div class="bar-label">Sun</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="20%" style="height:20%"></div><div class="bar-label">Mon</div></div>
+        <div class="bar-col"><div class="bar-fill" data-val="60%" style="height:60%"></div><div class="bar-label">Tue</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="island-overview" style="margin-top:30px;">
+    <div class="section-title">Big Island — Region Map</div>
+    <div class="island-svg-wrap">
+      <!-- Big Island silhouette -->
+      <svg viewBox="0 0 400 380" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="islandGrad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#1a4a2e" stop-opacity="0.8"/>
+            <stop offset="60%" stop-color="#0d3347" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#061820" stop-opacity="1"/>
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Island body approximation -->
+        <path d="M200,20 C230,18 270,22 300,35 C330,48 355,70 370,100 C385,130 390,165 385,200 C380,235 365,265 345,290 C320,318 290,340 255,355 C225,368 195,372 165,365 C135,358 108,342 85,318 C62,295 45,265 35,232 C22,195 18,158 25,122 C32,86 52,54 80,34 C108,14 150,22 200,20 Z"
+          fill="url(#islandGrad)"
+          stroke="rgba(127,179,200,0.3)"
+          stroke-width="1.5"
+          filter="url(#glow)"
+        />
+        <!-- Terrain texture lines -->
+        <path d="M170,80 C190,90 210,85 225,95 C240,105 235,120 220,130" stroke="rgba(45,106,79,0.3)" stroke-width="1" fill="none"/>
+        <path d="M200,120 C215,130 220,150 210,165 C200,180 185,178 178,165" stroke="rgba(45,106,79,0.25)" stroke-width="1" fill="none"/>
+        <!-- Summit dot (Mauna Kea area) -->
+        <circle cx="195" cy="140" r="6" fill="rgba(212,168,67,0.2)" stroke="rgba(212,168,67,0.4)" stroke-width="1"/>
+        <text x="195" y="125" text-anchor="middle" fill="rgba(212,168,67,0.6)" font-size="9" font-family="DM Mono, monospace">MAUNA KEA</text>
+        <!-- Coastline shimmer -->
+        <path d="M200,20 C230,18 270,22 300,35 C330,48 355,70 370,100 C385,130 390,165 385,200 C380,235 365,265 345,290 C320,318 290,340 255,355 C225,368 195,372 165,365 C135,358 108,342 85,318 C62,295 45,265 35,232 C22,195 18,158 25,122 C32,86 52,54 80,34 C108,14 150,22 200,20 Z"
+          fill="none"
+          stroke="rgba(127,179,200,0.15)"
+          stroke-width="4"
+        />
+      </svg>
+
+      <!-- Location dots on map -->
+      <div class="map-dot active-dot" id="dot-hilo" style="top:46%; left:72%;" onclick="showLocation('hilo')" title="Hilo">
+        <div class="map-tooltip">Hilo — 67°F ⛅</div>
+      </div>
+      <div class="map-dot" id="dot-kona" style="top:52%; left:20%;" onclick="showLocation('kona')" title="Kona">
+        <div class="map-tooltip">Kona — 72°F ☀️</div>
+      </div>
+      <div class="map-dot" id="dot-waimea" style="top:28%; left:38%;" onclick="showLocation('waimea')" title="Waimea">
+        <div class="map-tooltip">Waimea — 65°F 🌥️</div>
+      </div>
+      <div class="map-dot" id="dot-pahala" style="top:72%; left:46%;" onclick="showLocation('pahala')" title="Volcano/Pahala">
+        <div class="map-tooltip">Volcano — 52°F 🌫️</div>
+      </div>
+    </div>
+    <p style="font-family:'DM Mono',monospace;font-size:10px;color:var(--mist);opacity:0.5;margin-top:16px;letter-spacing:0.1em;">
+      TAP A DOT TO JUMP TO THAT REGION'S FORECAST
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  DATA UPDATED APRIL 3, 2026 &nbsp;·&nbsp; BIG ISLAND HAWAI'I &nbsp;·&nbsp; FORECAST VALID THROUGH APR 7
+</footer>
+
+<!-- ── AI CHATBOT ── -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" aria-label="Open weather assistant">
+  🌺
+  <span class="fab-tooltip">Ask the Weather Guide</span>
+</button>
+
+<div class="chat-window" id="chatWindow">
+  <div class="chat-header">
+    <div class="chat-avatar">🌺</div>
+    <div class="chat-header-info">
+      <div class="chat-header-name">Kai — Weather Guide</div>
+      <div class="chat-header-status"><span class="status-dot"></span>ONLINE · BIG ISLAND</div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+
+  <div class="chat-messages" id="chatMessages"></div>
+
+  <div class="chat-suggestions" id="chatSuggestions">
+    <button class="suggestion-chip" onclick="sendSuggestion(this)">Best beach weather?</button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)">Will it rain in Hilo?</button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)">Volcano visit this week?</button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)">What's vog?</button>
+  </div>
+
+  <div class="chat-input-area">
+    <input
+      class="chat-input"
+      id="chatInput"
+      type="text"
+      placeholder="Ask about Big Island weather…"
+      maxlength="300"
+      onkeydown="if(event.key==='Enter')sendMessage()"
+    />
+    <button class="chat-send" id="chatSend" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<script>
+  // Date line
+  const d = new Date();
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById('dateLine').textContent = '— ' + d.toLocaleDateString('en-US', opts) + ' —';
+
+  // Stars
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2 + 0.5;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*60}%;
+      left:${Math.random()*100}%;
+      --dur:${2+Math.random()*4}s;
+      --delay:${Math.random()*5}s;
+      --max-op:${0.3+Math.random()*0.5};
+    `;
+    starsEl.appendChild(s);
+  }
+
+  // Tab switching
+  function showLocation(loc) {
+    // panels
+    document.querySelectorAll('.location-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + loc).classList.add('active');
+    // tabs
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const labels = { hilo:'Hilo', kona:'Kona', waimea:'Waimea', pahala:'Volcano / Pahala' };
+    document.querySelectorAll('.tab').forEach(t => {
+      if (t.textContent.trim() === labels[loc]) t.classList.add('active');
+    });
+    // map dots
+    document.querySelectorAll('.map-dot').forEach(d => d.classList.remove('active-dot'));
+    const dotEl = document.getElementById('dot-' + loc);
+    if (dotEl) dotEl.classList.add('active-dot');
+
+    // Animate bars on panel switch
+    setTimeout(() => {
+      const panel = document.getElementById('panel-' + loc);
+      panel.querySelectorAll('.bar-fill').forEach(bar => {
+        const h = bar.style.height;
+        bar.style.height = '0%';
+        setTimeout(() => bar.style.height = h, 50);
+      });
+    }, 100);
+  }
+
+  // Initial bar animation
+  setTimeout(() => {
+    document.querySelectorAll('#panel-hilo .bar-fill').forEach(bar => {
+      const h = bar.style.height;
+      bar.style.height = '0%';
+      setTimeout(() => bar.style.height = h, 50);
+    });
+  }, 800);
+
+  // Forecast card hover ripple
+  document.querySelectorAll('.forecast-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transition = 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+    });
+  });
+
+  // ── AI CHATBOT ──
+  const WEATHER_CONTEXT = `
+You are Kai, a friendly and knowledgeable Big Island Hawai'i weather guide embedded in a weather forecast website.
+You have access to the following LIVE forecast data as of April 3, 2026:
+
+HILO (windward, east side, 36 ft elevation):
+- Current: 67°F, Cloudy
+- Fri: High 67°F, 25% rain | Sat: 70°F, 10% | Sun: 70°F, 25% | Mon: 69°F, 20% | Tue: 69°F, 40%
+
+KONA (leeward, west side, 30 ft elevation):
+- Current: 72°F, Cloudy
+- Fri: High 72°F, 10% rain | Sat: 72°F, 0% | Sun: 72°F, 10% | Mon: 73°F, 10% | Tue: 75°F, 20%
+
+WAIMEA (upcountry, 2,670 ft elevation):
+- Current: 65°F, Cloudy
+- Fri: 66°F, 35% | Sat: 68°F, 20% | Sun: 68°F, 10% | Mon: 69°F, 35% | Tue: 70°F, 20%
+
+VOLCANO / PAHALA (Ka'ū district, 3,000+ ft elevation):
+- Current: 52°F, Cloudy/Misty
+- Fri: 52°F, 20% | Sat: 55°F, 35% | Sun: 54°F, 35% | Mon: 53°F, 20% | Tue: 49°F, 60% rain
+
+IMPORTANT NOTES:
+- Trade winds are active — typical windward (Hilo side) showers expected
+- Kīlauea volcano may produce vog (volcanic smog) — visitors should check HVO (Hawaiian Volcano Observatory)
+- The island has microclimates — it can be sunny in Kona while raining in Hilo simultaneously
+- Hilo is one of the wettest cities in the US; Kona is typically sunny and dry
+
+Answer conversationally, warmly, and with local flavor. Use Hawaiian words naturally (like "makai" for toward the ocean, "mauka" for toward the mountain). Keep responses concise — 2-4 sentences usually. If asked about activities, give practical weather-based advice. Use emojis sparingly but naturally.
+  `.trim();
+
+  let chatOpen = false;
+  let conversationHistory = [];
+  let greeted = false;
+
+  function toggleChat() {
+    chatOpen = !chatOpen;
+    const win = document.getElementById('chatWindow');
+    const fab = document.getElementById('chatFab');
+    win.classList.toggle('open', chatOpen);
+    fab.textContent = chatOpen ? '✕' : '🌺';
+    fab.style.background = chatOpen
+      ? 'linear-gradient(135deg, #555, #333)'
+      : 'linear-gradient(135deg, #d4a843, #b8860b)';
+
+    if (chatOpen && !greeted) {
+      greeted = true;
+      setTimeout(() => addBotMessage("Aloha! 🌺 I'm Kai, your Big Island weather guide. I have today's live forecast for Hilo, Kona, Waimea, and the Volcano area. What would you like to know?"), 400);
+    }
+    if (chatOpen) setTimeout(() => document.getElementById('chatInput').focus(), 400);
+  }
+
+  function addBotMessage(text) {
+    const msgs = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.innerHTML = `
+      <div class="msg-avatar">🌺</div>
+      <div class="msg-bubble">${text}</div>
+    `;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function addUserMessage(text) {
+    const msgs = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'msg user';
+    div.innerHTML = `
+      <div class="msg-avatar">👤</div>
+      <div class="msg-bubble">${text}</div>
+    `;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'typing-indicator';
+    div.id = 'typingIndicator';
+    div.innerHTML = `
+      <div class="msg-avatar" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#2d6a4f);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">🌺</div>
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    `;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  function hideSuggestions() {
+    const s = document.getElementById('chatSuggestions');
+    if (s) s.style.display = 'none';
+  }
+
+  function sendSuggestion(btn) {
+    const text = btn.textContent;
+    hideSuggestions();
+    processMessage(text);
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    hideSuggestions();
+    processMessage(text);
+  }
+
+  async function processMessage(text) {
+    addUserMessage(text);
+    const sendBtn = document.getElementById('chatSend');
+    const input = document.getElementById('chatInput');
+    sendBtn.disabled = true;
+    input.disabled = true;
+
+    const typingEl = showTyping();
+
+    conversationHistory.push({ role: 'user', content: text });
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: WEATHER_CONTEXT,
+          messages: conversationHistory
+        })
+      });
+
+      const data = await response.json();
+      const reply = data.content?.map(b => b.text || '').join('') || "Sorry, I had trouble connecting. Please try again!";
+
+      conversationHistory.push({ role: 'assistant', content: reply });
+
+      removeTyping();
+      addBotMessage(reply.replace(/\n/g, '<br>'));
+    } catch (err) {
+      removeTyping();
+      addBotMessage("Hmm, the trade winds must be interfering with my signal 😅 Please try again in a moment.");
+    }
+
+    sendBtn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
+</script>
+</body>
+</html>
